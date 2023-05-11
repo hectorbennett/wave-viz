@@ -10,9 +10,9 @@ interface Wave {
 
 const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
   console.log(points);
-  ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
+  ctx.beginPath();
+  for (let i = 0; i < points.length; i++) {
     console.log(points[i].x, points[i].y);
     ctx.lineTo(points[i].x, points[i].y * 50 + 100);
   }
@@ -30,14 +30,21 @@ function WaveCanvas({ points }: ProcessedWave) {
   }, [points]);
 
   return (
-    <canvas
+    <div
       css={css`
-        border: 1px solid black;
+        background: #53535e;
+        border-radius: 10px;
       `}
-      ref={canvasRef}
-      width={300}
-      height={200}
-    />
+    >
+      <canvas
+        css={css`
+          display: block;
+        `}
+        ref={canvasRef}
+        width={300}
+        height={200}
+      />
+    </div>
   );
 }
 
@@ -49,9 +56,9 @@ function WaveGridItem({ id, equation, points, onChange }: WaveGridItemProps) {
   return (
     <div
       css={css`
-        border: 1px solid black;
         display: flex;
         flex-direction: column;
+        gap: 10px;
       `}
     >
       <WaveCanvas id={id} equation={equation} points={points} />
@@ -125,10 +132,12 @@ export default function WaveGrid() {
   return (
     <div
       css={css`
-        border: 1px solid black;
         display: flex;
         gap: 10px;
         padding: 10px;
+        background: #262626;
+        border-radius: 10px;
+        align-items: center;
       `}
     >
       {processed_waves.map((wave) => (
@@ -152,10 +161,14 @@ function AddNewWave({ onClick }: { onClick: () => void }) {
         border: 1px solid black;
         width: 100px;
         height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
       `}
       onClick={onClick}
     >
-      Add new wave
+      +
     </div>
   );
 }
