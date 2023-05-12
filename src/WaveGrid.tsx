@@ -9,10 +9,10 @@ interface Wave {
 }
 
 const EXAMPLE_EQUATIONS = [
-  "sin(x/16)",
+  "sin(x / 16)",
   "-y",
   "tanh(y * 2)",
-  "y - cos(x/3) / 5",
+  "y - cos(x / 3) / 5",
 ];
 
 const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
