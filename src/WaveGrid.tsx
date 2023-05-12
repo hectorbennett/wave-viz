@@ -11,7 +11,7 @@ const EXAMPLE_EQUATIONS = [
   "Math.sin(x/16)",
   "-y",
   "Math.tanh(y * 2)",
-  "y * 1.5",
+  "y - Math.cos(x/3) / 5",
 ];
 
 const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
