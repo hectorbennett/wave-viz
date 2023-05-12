@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { css } from "@emotion/react";
 import { v4 as uuid } from "uuid";
+import * as math from "mathjs";
 
 interface Wave {
   id: string;
@@ -8,14 +9,14 @@ interface Wave {
 }
 
 const EXAMPLE_EQUATIONS = [
-  "Math.sin(x/16)",
+  "sin(x/16)",
   "-y",
-  "Math.tanh(y * 2)",
-  "y - Math.cos(x/3) / 5",
+  "tanh(y * 2)",
+  "y - cos(x/3) / 5",
 ];
 
 const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
-  ctx.translate(0.5, 0.5);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.strokeStyle = "#00ffc3";
   ctx.moveTo(points[0].x, points[0].y);
   ctx.beginPath();
@@ -176,10 +177,8 @@ function process_wave(wave: Wave, previous_points: Array<Point> | null) {
   // calculate the points and add an error (if appropriate).
   const parsed_equation = (x: number, y: number) => {
     try {
-      return eval(wave.equation);
-    } catch (e: unknown) {
-      console.log(e);
-      console.log((e as Error).toString());
+      return math.evaluate(wave.equation, { x, y });
+    } catch {
       return 0;
     }
   };
