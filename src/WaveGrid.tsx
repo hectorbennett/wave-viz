@@ -1,6 +1,5 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { css } from "@emotion/react";
-// import Wave from "./Wave";
-import { useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
 interface Wave {
@@ -8,12 +7,19 @@ interface Wave {
   equation: string;
 }
 
+const EXAMPLE_EQUATIONS = [
+  "Math.sin(x/16)",
+  "-y",
+  "Math.tanh(y * 2)",
+  "y * 1.5",
+];
+
 const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
-  console.log(points);
+  ctx.translate(0.5, 0.5);
+  ctx.strokeStyle = "#00ffc3";
   ctx.moveTo(points[0].x, points[0].y);
   ctx.beginPath();
   for (let i = 0; i < points.length; i++) {
-    console.log(points[i].x, points[i].y);
     ctx.lineTo(points[i].x, points[i].y * 50 + 100);
   }
   ctx.stroke();
@@ -50,6 +56,7 @@ function WaveCanvas({ points }: ProcessedWave) {
 
 interface WaveGridItemProps extends ProcessedWave {
   onChange: (value: string) => void;
+  index: number;
 }
 
 function WaveGridItem({ id, equation, points, onChange }: WaveGridItemProps) {
@@ -61,7 +68,7 @@ function WaveGridItem({ id, equation, points, onChange }: WaveGridItemProps) {
         gap: 10px;
       `}
     >
-      <WaveCanvas id={id} equation={equation} points={points} />
+      <WaveCanvas id={id} equation={equation} points={points} error={null} />
       <input
         type="text"
         value={equation}
@@ -77,16 +84,22 @@ interface Point {
 }
 interface ProcessedWave extends Wave {
   points: Array<Point>;
+  error: string | null;
 }
 
 export default function WaveGrid() {
   const [waves, setWaves] = useState<Wave[]>([
-    { id: uuid(), equation: "Math.sin(x/16)" },
+    { id: uuid(), equation: EXAMPLE_EQUATIONS[0] },
   ]);
 
   const addNewWave = () =>
     setWaves((w) => {
-      return [...w, { id: uuid(), equation: "-y" }];
+      let equation = "y";
+      if (w.length < EXAMPLE_EQUATIONS.length) {
+        equation = EXAMPLE_EQUATIONS[w.length];
+      }
+      EXAMPLE_EQUATIONS[w.length];
+      return [...w, { id: uuid(), equation: equation }];
     });
 
   const setEquation = (id: string, value: string) => {
@@ -102,32 +115,26 @@ export default function WaveGrid() {
 
   const processed_waves: ProcessedWave[] = [];
   for (let i = 0; i < waves.length; i++) {
-    const parsed_equation = (x: number, y: number) => {
-      try {
-        return eval(waves[i].equation);
-      } catch (e) {
-        console.log(e);
-        return 0;
-      }
-    };
-    let points: Array<Point>;
-    if (i == 0) {
-      points = Array.from(Array(300).keys()).map((x) => ({
-        x,
-        y: parsed_equation(x, 0),
-      }));
-    } else {
-      points = processed_waves[i - 1].points.map((point) => ({
-        x: point.x,
-        y: parsed_equation(point.x, point.y),
-      }));
-    }
-    processed_waves.push({
-      id: waves[i].id,
-      equation: waves[i].equation,
-      points: points,
-    });
+    processed_waves.push(
+      process_wave(waves[i], i > 0 ? processed_waves[i - 1].points : null)
+    );
   }
+
+  const renderWaveGridItem = useCallback(
+    (wave: ProcessedWave, index: number) => {
+      return (
+        <WaveGridItem
+          index={index}
+          key={`${wave.id}-${index}`}
+          {...wave}
+          onChange={(value) => {
+            setEquation(wave.id, value);
+          }}
+        />
+      );
+    },
+    []
+  );
 
   return (
     <div
@@ -135,20 +142,12 @@ export default function WaveGrid() {
         display: flex;
         gap: 10px;
         padding: 10px;
-        background: #262626;
+        background: #303037;
         border-radius: 10px;
         align-items: center;
       `}
     >
-      {processed_waves.map((wave) => (
-        <WaveGridItem
-          {...wave}
-          onChange={(value) => {
-            setEquation(wave.id, value);
-          }}
-        />
-      ))}
-
+      {processed_waves.map((wave, index) => renderWaveGridItem(wave, index))}
       <AddNewWave onClick={addNewWave} />
     </div>
   );
@@ -171,4 +170,36 @@ function AddNewWave({ onClick }: { onClick: () => void }) {
       +
     </div>
   );
+}
+
+function process_wave(wave: Wave, previous_points: Array<Point> | null) {
+  // calculate the points and add an error (if appropriate).
+  const parsed_equation = (x: number, y: number) => {
+    try {
+      return eval(wave.equation);
+    } catch (e: unknown) {
+      console.log(e);
+      console.log((e as Error).toString());
+      return 0;
+    }
+  };
+  let points: Array<Point>;
+  if (!previous_points) {
+    points = Array.from(Array(300).keys()).map((x) => ({
+      x,
+      y: parsed_equation(x, 0),
+    }));
+  } else {
+    points = previous_points.map((point) => ({
+      x: point.x,
+      y: parsed_equation(point.x, point.y),
+    }));
+  }
+
+  return {
+    id: wave.id,
+    equation: wave.equation,
+    points: points,
+    error: null,
+  };
 }
