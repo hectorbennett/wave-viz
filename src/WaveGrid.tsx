@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
 import { css } from "@emotion/react";
 import { v4 as uuid } from "uuid";
-import * as math from "mathjs";
+import { evaluate } from "mathjs/number";
 import type { Point, ProcessedWave, Wave } from "./WaveGridItem";
 import WaveGridItem from "./WaveGridItem";
-import { merge_equations } from "./merge_equations";
+// import { merge_equations } from "./merge_equations";
 
 const EXAMPLE_EQUATIONS = [
   "sin(x / 16)",
@@ -135,7 +135,7 @@ function process_wave(wave: Wave, previous_points: Array<Point> | null) {
   // calculate the points and add an error (if appropriate).
   const parsed_equation = (x: number, y: number) => {
     try {
-      return math.evaluate(wave.equation, { x, y });
+      return evaluate(wave.equation, { x, y });
     } catch {
       return 0;
     }
