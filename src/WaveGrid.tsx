@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { css } from "@emotion/react";
 import { v4 as uuid } from "uuid";
 import * as math from "mathjs";
-
-interface Wave {
-  id: string;
-  equation: string;
-}
+import type { Point, ProcessedWave, Wave } from "./WaveGridItem";
+import WaveGridItem from "./WaveGridItem";
+import { merge_equations } from "./merge_equations";
 
 const EXAMPLE_EQUATIONS = [
   "sin(x / 16)",
@@ -14,79 +12,6 @@ const EXAMPLE_EQUATIONS = [
   "tanh(y * 2)",
   "y - cos(x / 3) / 5",
 ];
-
-const drawPoints = (ctx: CanvasRenderingContext2D, points: Array<Point>) => {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.strokeStyle = "#00ffc3";
-  ctx.moveTo(points[0].x, points[0].y);
-  ctx.beginPath();
-  for (let i = 0; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y * 50 + 100);
-  }
-  ctx.stroke();
-};
-
-function WaveCanvas({ points }: ProcessedWave) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, 300, 200);
-    drawPoints(ctx, points);
-  }, [points]);
-
-  return (
-    <div
-      css={css`
-        background: #53535e;
-        border-radius: 10px;
-      `}
-    >
-      <canvas
-        css={css`
-          display: block;
-        `}
-        ref={canvasRef}
-        width={300}
-        height={200}
-      />
-    </div>
-  );
-}
-
-interface WaveGridItemProps extends ProcessedWave {
-  onChange: (value: string) => void;
-  index: number;
-}
-
-function WaveGridItem({ id, equation, points, onChange }: WaveGridItemProps) {
-  return (
-    <div
-      css={css`
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      `}
-    >
-      <WaveCanvas id={id} equation={equation} points={points} error={null} />
-      <input
-        type="text"
-        value={equation}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  );
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
-interface ProcessedWave extends Wave {
-  points: Array<Point>;
-  error: string | null;
-}
 
 export default function WaveGrid() {
   const [waves, setWaves] = useState<Wave[]>([
@@ -141,15 +66,48 @@ export default function WaveGrid() {
     <div
       css={css`
         display: flex;
-        gap: 10px;
-        padding: 10px;
-        background: #303037;
-        border-radius: 10px;
         align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 2rem;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
       `}
     >
-      {processed_waves.map((wave, index) => renderWaveGridItem(wave, index))}
-      <AddNewWave onClick={addNewWave} />
+      <div
+        css={css`
+          display: flex;
+          gap: 10px;
+          padding: 10px;
+          background: #303037;
+          border-radius: 10px;
+          align-items: center;
+          // margin: 2rem 10rem;
+        `}
+      >
+        {processed_waves.map((wave, index) => renderWaveGridItem(wave, index))}
+        <AddNewWave onClick={addNewWave} />
+      </div>
+      {/* <div
+        css={css`
+          // position: fixed;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        `}
+      >
+        <div
+          css={css`
+            background: #303037;
+            padding: 1rem;
+            border-radius: 1rem;
+            position: fixed;
+          `}
+        >
+          {merge_equations(waves.map((wave) => wave.equation))}
+        </div>
+      </div> */}
     </div>
   );
 }

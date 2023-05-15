@@ -1,4 +1,3 @@
-import "./App.css";
 import WaveGrid from "./WaveGrid";
 
 function App() {
